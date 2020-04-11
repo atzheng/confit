@@ -8,7 +8,7 @@ import toolz.dicttoolz as dtz
 
 
 def str2dict(d):
-    return json.dumps(d, sort_keys=True)
+    return json.dumps(d, sort_keys=True, default=str)
 
 
 def hash_id(length=6):

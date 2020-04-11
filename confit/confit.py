@@ -10,9 +10,6 @@ import yaml
 
 import confit.id as cid
 
-# Utilities for manipulating configs (lists of dicts).
-# TODO make default factories orderedDict
-
 
 # Utilities
 # -------------------------------------------------------------------------
@@ -23,15 +20,21 @@ def flatten_dict(dkt):
 def flatten_item(it):
     k, v = it
     if isinstance(v, list):
-        return [("%s_%d" % (k, i), v[i]) for i in range(len(v))]
+        return [("%s.%d" % (k, i), v[i]) for i in range(len(v))]
     elif isinstance(v, dict):
-        return [(k + "_" + vk, vv) for (vk, vv) in flatten_dict(v).items()]
+        return [(k + "." + vk, vv) for (vk, vv) in flatten_dict(v).items()]
     else:
         return [(k, v)]
 
 
-def str2dict(d):
-    return json.dumps(d, sort_keys=True)
+def recursive_merge(*dicts):
+    "Values of later dicts override those of earier ones."
+    def merger(vals):
+        if len(vals) > 1 and all([isinstance(v, dict) for v in vals]):
+            return f.merge_with(merger, *vals)
+        else:
+            return vals[-1]
+    return f.merge_with(merger, *dicts)
 
 
 # Config generation
@@ -54,8 +57,12 @@ def assoc_in_fn(d, keys, fn, **kwargs):
     return dtz.assoc_in(d, keys, fn(d), **kwargs)
 
 
-def cartesian(A, B):
-    return [dtz.merge(a, b) for (a, b) in it.product(A, B)]
+def cartesian_merge(*args):
+    return [recursive_merge(*ds) for ds in it.product(*args)]
+
+
+def namespace(cfgs, name):
+    return [{name: cfg} for cfg in cfgs]
 
 
 # Output
@@ -79,5 +86,6 @@ def write_configs(cfgs, root=".", format="json"):
 
 def get_manifest(cfgs):
     flat_configs = list(map(flatten_dict, cfgs))
-    return pd.DataFrame.from_dict(flat_configs)
-
+    df = pd.DataFrame.from_dict(flat_configs)
+    df.set_index("config_id")
+    return df
