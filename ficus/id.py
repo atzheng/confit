@@ -35,12 +35,25 @@ def codename_id(**kwargs):
 
 
 def abbrev(x, length=3):
-    # TODO should remove vowels until it achieves length
-    if len(x) < length:
+    if len(x) <= length:
         return x
-    x = re.sub(r"[^\w\s]", "", x)
-    x = x[0] + re.sub(r"[aeiouAEIOU]", "", x[1:])
-    return x[:min(length, len(x))]
+    priorities = [1] + f.lmap(priority, f.rest(x))
+    idx = sorted(f.lzip(*f.take(length, argsort(priorities)))[1])
+    abbr = "".join([x[i] for i in idx])
+    return abbr
+
+
+def priority(c):
+    if c in "_.- \t":
+        return 5
+    elif c in "aeiouAEIOU":
+        return 2
+    else:
+        return 1
+
+
+def argsort(lst):
+    return sorted((e, i) for i, e in enumerate(lst))
 
 
 def cat(*fns, catter="_".join):

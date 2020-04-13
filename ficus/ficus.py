@@ -7,15 +7,19 @@ import funcy as f
 import pandas as pd
 import yaml
 
-from .id import codename_id
+from .id import codename_id, abbrev
 from .decorators import figgify, vectorize
 from .utils import recursive_merge, flatten_dict, set_in_fn
+from .funcy_imports import project, walk_keys
 
 
 # Additional config utilities
 # -------------------------------------------------------------------------
 # All of these functions accept a list or Ficus and returns an object of
 # the same type.
+set_in_fn = vectorize(set_in_fn)
+
+
 @figgify
 def product(*args, pred=f.constantly(True)):
     """
@@ -33,7 +37,7 @@ def namespace(cfgs, name):
 
 @figgify
 def generate_ids(cfgs, id_fn=codename_id(), key="config_id"):
-    return vectorize(set_in_fn)(cfgs, [key], id_fn)
+    return set_in_fn(cfgs, [key], id_fn)
 
 
 def to_dict(item):
@@ -58,10 +62,19 @@ def write_configs(cfgs, root=".", format="json",
         fname = os.path.join(path, "config.{ext}".format(ext=format))
         with open(fname, "w") as file:
             writer(cfg, file)
-    get_manifest(cfgs).to_csv(os.path.join(root, "manifest.csv"), index=False)
 
 
-def get_manifest(cfgs):
-    flat_configs = list(map(flatten_dict, cfgs))
+def write_manifest(cfgs, root=".", **kwargs):
+    path = os.path.join(root, "manifest.csv")
+    get_manifest(cfgs, **kwargs).to_csv(path, index=False)
+
+
+def get_manifest(cfgs, simplify=True, key_length=float("Inf")):
+    flat_configs = f.lmap(
+        f.partial(flatten_dict, key_length=key_length), cfgs)
+    if simplify:
+        valid_keys = [k for k, vs in f.zip_dicts(*flat_configs)
+                      if len(f.ldistinct(vs)) > 1]
+        flat_configs = project(flat_configs, valid_keys)
     df = pd.DataFrame.from_dict(flat_configs)
     return df
