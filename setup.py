@@ -8,6 +8,5 @@ setup(name='ficus',
       author_email='atz@mit.edu',
       license='MIT',
       packages=['ficus'],
-      install_requires=['funcy', 'toolz', 'codenamize', 'yaml',
-                        'pandas'],
+      install_requires=['funcy', 'codenamize', 'yaml', 'pandas'],
       zip_safe=False)
