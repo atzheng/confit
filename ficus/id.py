@@ -1,6 +1,5 @@
 import hashlib
 import json
-import re
 
 import funcy as f
 from codenamize import codenamize
