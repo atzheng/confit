@@ -4,7 +4,6 @@ import re
 
 import funcy as f
 from codenamize import codenamize
-import toolz.dicttoolz as dtz
 
 
 def str2dict(d):
@@ -23,7 +22,7 @@ def abbrev_id(fields, length=3):
     def id(d):
         return "_".join(["{fld}={val}".format(
             fld=abbrev(field[-1], length=length),
-            val=dtz.get_in(field, d))
+            val=f.get_in(d, field))
                          for field in fields])
     return id
 
@@ -36,6 +35,7 @@ def codename_id(**kwargs):
 
 
 def abbrev(x, length=3):
+    # TODO should remove vowels until it achieves length
     if len(x) < length:
         return x
     x = re.sub(r"[^\w\s]", "", x)
