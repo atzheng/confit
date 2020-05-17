@@ -18,11 +18,17 @@ def hash_id(length=6):
 def abbrev_id(fields, length=3):
     fields = [x if isinstance(x, list) else [x] for x in fields]
 
+    def prefix(fld):
+        if length == 0:
+            return ""
+        else:
+            return abbrev(fld[-1], length=length) + "="
+
     def id(d):
-        return "_".join(["{fld}={val}".format(
-            fld=abbrev(field[-1], length=length),
-            val=f.get_in(d, field))
-                         for field in fields])
+        return "_".join([
+            "{pfx}{val}".format(pfx=prefix(field), val=f.get_in(d, field))
+            for field in fields])
+
     return id
 
 
