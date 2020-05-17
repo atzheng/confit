@@ -7,11 +7,11 @@ class Fig(dict):
         return yaml.dump(to_dict(self))
 
 
-
 class FigGroup(Fig):
     # TODO
     pass
 
 
 class Ficus(list):
-    pass
+    def __add__(self, other):
+        return Ficus(super(Ficus, self).__add__(other))
